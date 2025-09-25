@@ -13,16 +13,18 @@ class Incident(Base):
     raw_text = Column(Text, nullable=False)
     sanitized_text = Column(Text, nullable=False)
 
-    # one-to-many: one Incident → many metadata entries
-    metadata_entries = relationship("IncidentMetadata", back_populates="incident")
-
+    incident_metadata = relationship(
+        "IncidentMetadata",
+        back_populates="incident",
+        cascade="all, delete-orphan"
+    )
 
 class IncidentMetadata(Base):
     __tablename__ = "incident_metadata"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    incident_id = Column(String(36), ForeignKey("incidents.id"))
+    incident_id = Column(String(36), ForeignKey("incidents.id"), nullable=False)
     meta_key = Column(String(100), nullable=False)
     meta_value = Column(String(100), nullable=False)
 
-    incident = relationship("Incident", back_populates="metadata_entries")
+    incident = relationship("Incident", back_populates="incident_metadata")

@@ -19,7 +19,6 @@ def create_incident(request: IncidentRequest, db: Session = Depends(get_db)):
     db.flush()
 
     if request.metadata:
-        print("🔗 Adding metadata:", request.metadata)
         for key, value in request.metadata.items():
             meta_entry = IncidentMetadata(
                 meta_key=key,
@@ -30,8 +29,9 @@ def create_incident(request: IncidentRequest, db: Session = Depends(get_db)):
 
     db.commit()
     db.refresh(new_incident)
+
     metadata_dict = {
-        m.meta_key: m.meta_value for m in new_incident.metadata_entries
+        m.meta_key: m.meta_value for m in new_incident.incident_metadata
     }
 
     return IncidentResponse(
@@ -43,6 +43,7 @@ def create_incident(request: IncidentRequest, db: Session = Depends(get_db)):
         metadata=metadata_dict or None
     )
 
+
 @router.get("/{incident_id}", response_model=IncidentResponse)
 def get_incident(incident_id: str, db: Session = Depends(get_db)):
     db_incident = db.query(Incident).filter(Incident.id == incident_id).first()
@@ -50,7 +51,7 @@ def get_incident(incident_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Incident not found")
 
     metadata_dict = {
-        m.meta_key: m.meta_value for m in db_incident.metadata_entries
+        m.meta_key: m.meta_value for m in db_incident.incident_metadata
     }
 
     return IncidentResponse(
